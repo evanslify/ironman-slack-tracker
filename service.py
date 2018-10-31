@@ -87,7 +87,7 @@ def post_slack():
         'icon_emoji': ':truck:',
         'text': get_all_not_completed()
     }
-    requests.post('slack-webhook-url', json=payload)
+    requests.post('slack webhook url', json=payload)
 
 
 def handler(event, context):
