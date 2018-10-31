@@ -1,33 +1,26 @@
+# -*- coding: utf-8 -*-
 import requests
 from bs4 import UnicodeDammit
 from lxml import etree
 from datetime import date
+from team_members import team_members
 
-iron_man_start_date = date(2017, 12, 20)
+iron_man_start_date = date(2018, 10, 16)
 expected_post_count = (date.today() - iron_man_start_date).days + 1
 
 
 def generate_base_url(number):
-    return 'https://ithelp.ithome.com.tw/ironman/signup/team/17?page={0}'.format(number)
-
-
-page1_url = generate_base_url(1)
-page2_url = generate_base_url(2)
-page3_url = generate_base_url(3)
+    return 'https://ithelp.ithome.com.tw/ironman/signup/team/50?page={0}'.format(number)
 
 
 def iron_man_id_from_url(url):
     return url.split('/')[-1]
 
-
-team_members = [
-    {
-        'iron_man_id': '1337',
-        'slack_handle': 'LOREM'
-    }
-]
-
 team_member_ids = [i['iron_man_id'] for i in team_members]
+
+page1_url = generate_base_url(1)
+page2_url = generate_base_url(2)
+page3_url = generate_base_url(3)
 
 pages = [
     requests.get(page1_url).content,
@@ -75,8 +68,11 @@ result = [convert_html_to_dict(i) for i in posts]
 
 def get_all_not_completed():
     today_ironman_ids = [i['topic_id'] for i in result]
+    print(today_ironman_ids)
     not_completed = list(filter(lambda i: i['iron_man_id'] not in today_ironman_ids, team_members))
+    print(not_completed)
     if len(not_completed) == 0:
+        print('all finished')
         return False
     prefix = '目前仍未完成貼文的：'
     return '{0}{1}'.format(prefix, ''.join(['<@{0}>  '.format(i['slack_handle']) for i in not_completed]))
@@ -91,15 +87,9 @@ def post_slack():
         'icon_emoji': ':truck:',
         'text': get_all_not_completed()
     }
-    requests.post('slack url', json=payload)
+    requests.post('slack-webhook-url', json=payload)
 
 
-def lambda_handler(event, context):
-    if event['post_slack']:
-        post_slack()
-    return {
-        'message': result
-    }
-
-if __name__ == '__main__':
-    print(get_all_not_completed())
+def handler(event, context):
+    post_slack()
+    return
